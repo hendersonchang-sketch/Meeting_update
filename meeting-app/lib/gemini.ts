@@ -101,61 +101,67 @@ export async function analyzeMeetingVideo(
 
         logger.info('影片已準備就緒，開始分析...');
 
-        // 嘗試使用高品質模型 (NotebookLM 同級)，若失敗則退回 Flash
-        let modelName = 'gemini-1.5-pro-002';
-        let result;
+        // Helper function to run generation with retry for 429 errors
+        const runGeneration = async (prompt: string, stageName: string): Promise<string> => {
+            const modelName = 'gemini-2.0-flash-exp';
+            const maxRetries = 5; // 增加重試次數
+            let retryCount = 0;
 
-        try {
-            logger.info(`嘗試使用高品質模型: ${modelName}`);
-            const model = genAI.getGenerativeModel({
-                model: modelName,
-                generationConfig: {
-                    maxOutputTokens: 8192,
-                    temperature: 0.3,
-                },
-            });
+            while (retryCount < maxRetries) {
+                try {
+                    logger.info(`[${stageName}] 使用模型: ${modelName} (嘗試 ${retryCount + 1}/${maxRetries})`);
+                    const model = genAI.getGenerativeModel({
+                        model: modelName,
+                        generationConfig: {
+                            maxOutputTokens: 8192,
+                            temperature: 0.3,
+                        },
+                    });
 
-            const prompt = buildAnalysisPrompt();
-            result = await model.generateContent([
-                {
-                    fileData: {
-                        mimeType: file.mimeType,
-                        fileUri: file.uri,
-                    },
-                },
-                { text: prompt },
-            ]);
-        } catch (err: unknown) {
-            const errorMsg = err instanceof Error ? err.message : String(err);
-            logger.warn(`模型 ${modelName} 使用失敗，切換至備用模型 gemini-2.0-flash-exp`, { error: errorMsg });
+                    const result = await model.generateContent([
+                        {
+                            fileData: {
+                                mimeType: file.mimeType,
+                                fileUri: file.uri,
+                            },
+                        },
+                        { text: prompt },
+                    ]);
+                    return result.response.text();
 
-            // Fallback to Flash
-            modelName = 'gemini-2.0-flash-exp';
-            const model = genAI.getGenerativeModel({
-                model: modelName,
-                generationConfig: {
-                    maxOutputTokens: 8192,
-                    temperature: 0.3,
-                },
-            });
+                } catch (err: unknown) {
+                    const errorMsg = err instanceof Error ? err.message : String(err);
 
-            const prompt = buildAnalysisPrompt();
-            result = await model.generateContent([
-                {
-                    fileData: {
-                        mimeType: file.mimeType,
-                        fileUri: file.uri,
-                    },
-                },
-                { text: prompt },
-            ]);
-        }
+                    // 檢查是否為 Quota Exceeded (429)
+                    if (errorMsg.includes('429') || errorMsg.includes('Too Many Requests') || errorMsg.includes('quota')) {
+                        const waitTime = 60000; // 延長等待時間至 60 秒
+                        logger.warn(`[${stageName}] 配額不足 (429)，等待 ${waitTime / 1000} 秒後重試...`, { attempt: retryCount + 1 });
+                        await delay(waitTime);
+                        retryCount++;
+                    } else {
+                        // 其他錯誤直接拋出
+                        logger.error(`[${stageName}] 模型執行失敗`, { error: errorMsg });
+                        throw err;
+                    }
+                }
+            }
+            throw new Error(`[${stageName}] 重試次數過多，無法完成分析。`);
+        };
 
-        const responseText = result.response.text();
-        logger.info('AI 分析完成', { responseLength: responseText.length });
+        // --- Stage 1: 深度內容提取 ---
+        logger.info('執行 Stage 1: 深度內容提取...');
+        const extractionPrompt = buildExtractionPrompt();
+        const extractionNotes = await runGeneration(extractionPrompt, 'Stage 1');
+        logger.info('Stage 1 完成', { length: extractionNotes.length });
+
+        // --- Stage 2: 格式化 ---
+        logger.info('執行 Stage 2: 格式化輸出...');
+        const formattingPrompt = buildFormattingPrompt(extractionNotes);
+        const finalResponseText = await runGeneration(formattingPrompt, 'Stage 2');
+        logger.info('Stage 2 完成', { length: finalResponseText.length });
 
         // 解析回應
-        const parsed = parseGeminiResponse(responseText, logger);
+        const parsed = parseGeminiResponse(finalResponseText, logger);
 
         // 清理上傳的檔案
         try {
@@ -173,80 +179,85 @@ export async function analyzeMeetingVideo(
     }
 }
 
-// 建立分析 prompt - 根據實際會議紀錄範例
-function buildAnalysisPrompt(): string {
-    return `你是專業的會議記錄助理。請仔細分析這段會議錄影，根據以下格式產生詳細的會議紀錄。
+// Stage 1: 詳細內容萃取 Prompt
+function buildExtractionPrompt(): string {
+    return `你是專業的會議速記員與技術分析師。請仔細分析這段會議錄影，這是一場高強度的技術專案會議。
+    
+**你的目標是：寧可記樣太細，也不要遺漏任何一個技術細節。**
 
-⚠️ **嚴格規定：**
-- 所有類別標題 **完全固定，不可更改、不可省略、不可新增**
-- **只記錄影片中實際提到的內容，禁止編造**
-- 若該類別在影片中無相關討論，content 填入 ["無"]
+請針對以下面向進行 "逐字等級" 的重點編目：
 
-📝 **內容格式要求：**
-- **每個重點描述約 30 字**，簡潔但完整
-- 必須包含：具體日期、進度百分比、設備名稱、關鍵動作
-- **除了「重點紀錄」外，務必檢查並填寫「待辦事項」與「風險管理事項」，若無則填寫 ["無"]**
+1. **關鍵決策與結論**：所有已定案的項目，包含決策者是誰。
+2. **具體數據與參數 (這是最重要的)**：
+   - 務必提取所有：日期 (e.g. 12/5, 下週三)、時間 (14:00)、進度百分比 (85%)、預算金額、IP位置、版本號。
+   - 硬體型號 (e.g. Dell R750, Cisco 9k)、軟體名稱 (SAP HANA, DCIM)。
+3. **待辦事項 (Action Items)**：
+   - 誰 (Owner)？ 要在什麼時候 (Deadline)？ 做什麼具體動作 (Action)？
+4. **風險與問題 (Risks)**：
+   - 目前遇到的具體阻礙、需要的確切支援。
+5. **各項專案細節 (請依序詳細列出)**：
+   - 機房搬遷 (時程、動線、廠商)
+   - 機房服務 (環控、保全)
+   - 網路、資安 (防火牆策略、線路介接)
+   - 儲存設備 (Storage, Backup)
+   - SAP 硬體 (HANA 機器狀況)
+   - 文心機房搬遷
+   - 現代化顧問服務
 
-**範例格式（請嚴格參考此風格）：**
+**輸出要求：**
+- 請使用條列式。
+- 每個重點請盡量保留完整的句子，不要過度簡化，保留原始語氣中的強調點。
+- **請寫出至少 1500 字以上的詳細筆記。**`;
+}
 
-1. 機房搬遷：
-• 近兩週（12/2、3、5、9）進行四次週會，討論 VM 搬遷方法及 HANA 升級計畫。
-• 階段三前置規劃：動線計畫已於 12/3 交付，預計 12/13 報告。
+// Stage 2: 格式化 Prompt (接收 Stage 1 的筆記)
+function buildFormattingPrompt(notes: string): string {
+    return `你是專業的會議記錄編輯。請根據以下的 **會議詳細筆記**，將內容填入嚴格的 JSON 格式。
 
-2. 機房服務：
-• 子任務進度已達 95%，實體安全建置完成。
-• DCIM 客製化部分預計明年完成。
+**會議詳細筆記：**
+${notes}
+
+---
+
+**任務要求：**
+1. 依據上述筆記內容，填入對應的 JSON 欄位。
+2. **所有項目標題固定** (1. 機房搬遷, 2. 機房服務...等)，不可修改。
+3. **內容要求**：
+   - 每個重點類別 ("content" 陣列) 需包含 **3-5 個詳細要點**。
+   - 每個要點 **約 30 字**，簡潔但必須包含筆記中的具體數據（日期、與會人、設備名）。
+   - 若某類別在筆記中完全未提及，請填入 ["無"]。
+   - **待辦事項** 與 **風險事項** 務必從筆記中提取，若無則填 ["無"]。
 
 **只輸出 JSON，不要有任何其他文字！**
 
-{
-    "transcript": "會議逐字稿重點摘錄",
-    "summary": "會議摘要（100字以內）",
-    "minutes": {
-        "info": {
-            "title": "114年度新機房基礎架構建置技術小組進度會議紀錄",
-            "date": "民國114年MM月DD日（星期X）下午X時XX分",
-            "location": "民權東路二段144號7樓會議室",
-            "recorder": "記錄人姓名"
-        },
-        "attendees": {
-            "companyLeaders": ["Fanny Chan"],
-            "technicalTeam": ["Troy Tsuei", "Hank Hsieh", "Jason Yu", "Jack Sie", "Yuan Liu", "Erich Lee"],
-            "pmTeam": ["KuanLingLin", "WeiYuChang", "Chean Wu"],
-            "ibmTeam": ["Qi Peng", "Tony Yo", "Jack Wang", "Eric Chung", "Jacqueline Cheng"],
-            "vendors": ["遠傳", "中華", "精誠", "HPE", "Dell", "邁達特", "仁大"]
-        },
-        "keyPoints": [
-            {"category": "1. 機房搬遷", "content": [
-                "近兩週有進行X次週會：MM/DD討論XXX，MM/DD討論YYY",
-                "某項目進度說明：具體日期、狀態、下一步動作"
-            ]},
-            {"category": "2. 機房服務", "content": ["任務進度已達 XX%。具體完成項目說明。"]},
-            {"category": "3. 網路、資安", "content": ["網路整合測試進度為 XX%。具體測試項目說明。"]},
-            {"category": "4. 儲存", "content": ["MM/DD 完成某設備上架。具體設備名稱和動作。"]},
-            {"category": "5. SAP（HW）", "content": ["建置計劃進度說明。設備到貨和安裝狀態。"]},
-            {"category": "6. 文心機房搬遷", "content": ["搬遷時程和準備狀態說明。"]},
-            {"category": "7. 現代化顧問服務", "content": ["腳本編寫進度 XX%。問題和解決方案說明。"]}
-        ],
-        "actionItems": [
-            {"description": "待辦事項具體描述", "assignee": "負責人/團隊", "status": "pending"}
-        ],
-        "riskItems": [
-            {"description": "風險描述", "mitigation": "緩解措施"}
-        ],
-        "otherNotes": ["其他討論事項"],
-        "endTime": "下午X時XX分"
-    }
-}
-
-**填寫規則（必須嚴格遵守）：**
-1. 7 個 category 名稱 **絕對不可更改**：1. 機房搬遷、2. 機房服務、3. 網路、資安、4. 儲存、5. SAP（HW）、6. 文心機房搬遷、7. 現代化顧問服務
-2. **詳細記錄影片中每個討論項目，格式參照上方範例**
-3. 每個要點要包含：具體日期（如12/3）、進度百分比（如95%）、設備名稱、廠商名稱、動作說明
-4. 若影片中該類別無相關討論，content 填入 ["無"]
-5. 若無待辦事項，actionItems 設為 []
-6. 若無風險事項，riskItems 設為 []
-7. 只輸出 JSON，確保 JSON 完整有效`;
+${JSON.stringify({
+        "transcript": "精簡版逐字稿摘要...",
+        "summary": "會議高層摘要...",
+        "minutes": {
+            "info": {
+                "title": "114年度新機房基礎架構建置技術小組進度會議紀錄",
+                "date": "民國114年MM月DD日...",
+                "location": "會議地點",
+                "recorder": "記錄人"
+            },
+            "attendees": {
+                "companyLeaders": ["範例: 張副總", "李協理"],
+                "technicalTeam": ["範例: 王經理"],
+                "pmTeam": ["範例: 陳PM"],
+                "ibmTeam": [],
+                "vendors": []
+            },
+            "keyPoints": MEETING_TEMPLATE.keyPointCategories.map(cat => ({ category: cat, content: ["詳細要點1...", "詳細要點2..."] })),
+            "actionItems": [
+                { "owner": "負責人", "content": "待辦事項內容...", "deadline": "YYYY/MM/DD", "status": "進行中" }
+            ],
+            "riskItems": [
+                { "content": "風險內容...", "countermeasure": "對策...", "owner": "負責人" }
+            ],
+            "otherNotes": ["其他事項1...", "其他事項2..."],
+            "endTime": "17:30"
+        }
+    }, null, 2)}`;
 }
 
 // 解析 Gemini 回應
@@ -262,7 +273,7 @@ function parseGeminiResponse(
         let jsonStr = responseText.trim();
 
         // 記錄原始回應長度
-        console.log(`[Gemini] 原始回應長度: ${jsonStr.length} 字元`);
+        logger.debug(`[Gemini] 原始回應長度: ${jsonStr.length} 字元`);
 
         // 移除可能的 markdown code block（支援多種格式）
         jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/i, '');
@@ -275,8 +286,6 @@ function parseGeminiResponse(
         if (firstBrace !== -1 && lastBrace > firstBrace) {
             jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
         }
-
-        console.log(`[Gemini] 處理後 JSON 長度: ${jsonStr.length} 字元`);
 
         const parsed = JSON.parse(jsonStr);
 
@@ -291,34 +300,26 @@ function parseGeminiResponse(
                 actionItems: parsed.minutes?.actionItems || [],
                 riskItems: parsed.minutes?.riskItems || [],
                 otherNotes: parsed.minutes?.otherNotes || [],
-                endTime: parsed.minutes?.endTime || null,
+                endTime: parsed.minutes?.endTime || undefined,
             },
         };
 
-        console.log(`[Gemini] 解析成功 - keyPoints: ${result.minutes.keyPoints?.length || 0}, actionItems: ${result.minutes.actionItems?.length || 0}`);
-
         return result;
     } catch (error) {
-        console.error('[Gemini] JSON 解析失敗:', error);
-        console.error('[Gemini] 回應前 500 字:', responseText.substring(0, 500));
-
-        // 嘗試提取逐字稿部分
-        let transcript = responseText;
-
-        // 如果回應包含可識別的逐字稿標記，嘗試提取
-        const transcriptMatch = responseText.match(/"transcript"\s*:\s*"([^"]+)"/);
-        if (transcriptMatch) {
-            transcript = transcriptMatch[1].replace(/\\n/g, '\n');
-        }
+        logger.error('[Gemini] JSON 解析失敗', { error: String(error) });
 
         // 回傳基本結構，保留原始回應作為逐字稿
         return {
-            transcript: transcript,
+            transcript: responseText,
             summary: '解析失敗，請查看原始回應。錯誤: ' + (error instanceof Error ? error.message : String(error)),
             minutes: {
+                info: { title: '會議紀錄', date: new Date().toISOString().split('T')[0] },
+                attendees: {},
                 keyPoints: [],
                 actionItems: [],
                 riskItems: [],
+                otherNotes: [],
+                endTime: null,
             },
         };
     }
