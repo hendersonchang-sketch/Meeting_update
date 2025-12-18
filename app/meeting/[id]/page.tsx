@@ -173,22 +173,37 @@ export default function MeetingPage({ params }: { params: Promise<{ id: string }
                 {activeTab === 'minutes' && (
                     <div className="space-y-6 animate-slide-in">
                         {/* 7 大重點分類 */}
-                        {minutes?.keyPoints?.map((item: any, idx: number) => (
-                            <section key={idx} className="glass-card p-6 border-l-4 border-blue-500">
-                                <h3 className="text-lg font-bold mb-4 text-white flex items-center justify-between">
-                                    {item.category}
-                                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">重點紀錄</span>
-                                </h3>
-                                <ul className="space-y-3">
-                                    {item.content?.map((point: string, i: number) => (
-                                        <li key={i} className="flex gap-3 text-gray-300">
-                                            <span className="text-blue-500 mt-1.5">•</span>
-                                            <span className="leading-relaxed">{point}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </section>
-                        ))}
+                        {minutes?.keyPoints?.map((item: any, idx: number) => {
+                            // 移除類別原本可能帶有的數字前綴
+                            const cleanCategory = item.category.replace(/^(\d+[\.、\s]*)?/, '').trim();
+
+                            return (
+                                <section key={idx} className="glass-card p-6 border-l-4 border-blue-500">
+                                    <h3 className="text-lg font-bold mb-4 text-white flex items-center justify-between">
+                                        {/* 強制顯示 1. 2. 3. 編號 */}
+                                        <span>{idx + 1}. {cleanCategory}</span>
+                                        <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">重點紀錄</span>
+                                    </h3>
+                                    <ul className="space-y-3">
+                                        {item.content?.map((point: string, i: number) => {
+                                            // 清理子項目：移除重複的「數字. 類別名稱：」
+                                            const categoryEscaped = cleanCategory.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                            const cleanRegex = new RegExp(`^(\\d+[\\.、\\s]*)?(${categoryEscaped})?[：:\\s]*`, '');
+                                            const cleanPoint = point.replace(cleanRegex, '').trim();
+
+                                            if (!cleanPoint) return null;
+
+                                            return (
+                                                <li key={i} className="flex gap-3 text-gray-300">
+                                                    <span className="text-blue-500 mt-1.5">•</span>
+                                                    <span className="leading-relaxed">{cleanPoint}</span>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </section>
+                            );
+                        })}
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {/* 待辦事項 */}
