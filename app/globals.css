@@ -37,14 +37,12 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
 }
 
 html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
 }
 
 body {

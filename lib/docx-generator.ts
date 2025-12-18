@@ -40,7 +40,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: '南山人壽',
                                 size: 36, // 18pt
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         alignment: AlignmentType.CENTER,
@@ -53,7 +53,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: '114年度新機房基礎架構建置技術小組進度會議紀錄',
                                 size: 28, // 14pt
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         alignment: AlignmentType.CENTER,
@@ -66,7 +66,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: `時間：${minutes.info.date}（${getDayOfWeek(minutes.info.date)}）${minutes.info.time}`,
                                 size: 28,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         spacing: { after: 100 },
@@ -78,12 +78,12 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: `地點：${minutes.info.location || '民權東路二段144號7樓會議室'}`,
                                 size: 28,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                             new TextRun({
                                 text: `        記錄：${minutes.info.recorder || '待確認'}`,
                                 size: 28,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         spacing: { after: 100 },
@@ -95,7 +95,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: `出席：南山長官：${minutes.attendees.companyLeaders.join(', ') || '待確認'}`,
                                 size: 28,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         spacing: { after: 100 },
@@ -107,7 +107,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: `\t技術小組代表：${minutes.attendees.technicalTeam.join(', ') || '待確認'}`,
                                 size: 28,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         spacing: { after: 100 },
@@ -119,7 +119,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: `\tPM代表：${minutes.attendees.pmTeam.join(', ') || '待確認'}`,
                                 size: 24,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         spacing: { after: 100 },
@@ -131,7 +131,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: `\tIBM代表：${minutes.attendees.ibmTeam.join(', ') || '待確認'}`,
                                 size: 28,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         spacing: { after: 100 },
@@ -143,7 +143,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: `\t  參與廠商：${minutes.attendees.vendors.join('、') || '待確認'}`,
                                 size: 28,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         spacing: { after: 200 },
@@ -155,7 +155,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: '討論紀錄與重點紀錄：',
                                 size: 28,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                                 bold: true,
                             }),
                         ],
@@ -168,7 +168,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: '一 重點紀錄',
                                 size: 24, // 12pt
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         heading: HeadingLevel.HEADING_3,
@@ -184,7 +184,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: '二 待辦事項：',
                                 size: 24,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         heading: HeadingLevel.HEADING_3,
@@ -199,7 +199,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: '三 風險管理事項：',
                                 size: 24,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         heading: HeadingLevel.HEADING_3,
@@ -211,7 +211,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: '＊必要時風險評估需依循南山內部程序進行（如風管、法遵、資安等）',
                                 size: 24,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         spacing: { after: 100 },
@@ -225,7 +225,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: '四 其他事項紀錄',
                                 size: 24,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         heading: HeadingLevel.HEADING_3,
@@ -240,7 +240,7 @@ export async function generateMeetingDocument(
                             new TextRun({
                                 text: `散會：${minutes.endTime || '待確認'}`,
                                 size: 24,
-                                font: '標楷體',
+                                font: '微軟正黑體',
                             }),
                         ],
                         spacing: { before: 200 },
@@ -288,7 +288,7 @@ function generateKeyPointsParagraphs(keyPoints: MeetingMinutes['keyPoints']): Pa
                     new TextRun({
                         text: `${index + 1}. ${category}：`,
                         size: 24,
-                        font: '標楷體',
+                        font: '微軟正黑體',
                         bold: true,
                     }),
                 ],
@@ -317,7 +317,7 @@ function generateKeyPointsParagraphs(keyPoints: MeetingMinutes['keyPoints']): Pa
                         new TextRun({
                             text: cleanContent,
                             size: 24,
-                            font: '標楷體',
+                            font: '微軟正黑體',
                         }),
                     ],
                     bullet: { level: 1 }, // 子項內容使用圓圈
@@ -341,7 +341,7 @@ function generateActionItemsParagraphs(actionItems: MeetingMinutes['actionItems'
                     new TextRun({
                         text: '無',
                         size: 24,
-                        font: '標楷體',
+                        font: '微軟正黑體',
                     }),
                 ],
             }),
@@ -355,13 +355,13 @@ function generateActionItemsParagraphs(actionItems: MeetingMinutes['actionItems'
                     new TextRun({
                         text: item.description,
                         size: 24,
-                        font: '標楷體',
+                        font: '微軟正黑體',
                     }),
                     item.assignee
                         ? new TextRun({
                             text: `（${item.assignee}）`,
                             size: 24,
-                            font: '標楷體',
+                            font: '微軟正黑體',
                         })
                         : new TextRun({ text: '' }),
                 ],
@@ -382,7 +382,7 @@ function generateRiskItemsParagraphs(riskItems: MeetingMinutes['riskItems']): Pa
                     new TextRun({
                         text: '無',
                         size: 24,
-                        font: '標楷體',
+                        font: '微軟正黑體',
                     }),
                 ],
             }),
@@ -396,7 +396,7 @@ function generateRiskItemsParagraphs(riskItems: MeetingMinutes['riskItems']): Pa
                     new TextRun({
                         text: item.description,
                         size: 24,
-                        font: '標楷體',
+                        font: '微軟正黑體',
                     }),
                 ],
                 bullet: { level: 0 },
@@ -416,7 +416,7 @@ function generateOtherNotesParagraphs(notes: string[]): Paragraph[] {
                     new TextRun({
                         text: '無',
                         size: 24,
-                        font: '標楷體',
+                        font: '微軟正黑體',
                     }),
                 ],
             }),
@@ -430,7 +430,7 @@ function generateOtherNotesParagraphs(notes: string[]): Paragraph[] {
                     new TextRun({
                         text: note,
                         size: 24,
-                        font: '標楷體',
+                        font: '微軟正黑體',
                     }),
                 ],
                 bullet: { level: 0 },
