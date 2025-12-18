@@ -271,15 +271,17 @@ function generateKeyPointsParagraphs(keyPoints: MeetingMinutes['keyPoints']): Pa
         '現代化顧問服務',
     ];
 
-    // 建立分類對應表
+    // 建立分類對應表（鍵值預先處理：去除編號以利匹配）
     const categoryMap = new Map<string, string[]>();
     for (const point of keyPoints) {
-        categoryMap.set(point.category, point.content);
+        // 去除可能的 "1. ", "2. ", "1、" 等前綴
+        const cleanKey = point.category.replace(/^(\d+[\.、\s]*)?/, '').trim();
+        categoryMap.set(cleanKey, point.content);
     }
 
     // 依照固定順序輸出
     fixedCategories.forEach((category, index) => {
-        // 分類標題（數字編號 1. 2. ...）
+        // 分類標題：強制使用數字編號 1. 2. ...，且絕對不使用 bullet 點點
         paragraphs.push(
             new Paragraph({
                 children: [
@@ -295,13 +297,19 @@ function generateKeyPointsParagraphs(keyPoints: MeetingMinutes['keyPoints']): Pa
         );
 
         // 取得該分類的內容，若無則顯示「無」
-        let contents = categoryMap.get(category) || ['無'];
+        // 使用去除編號後的名稱來對應
+        const contents = categoryMap.get(category) || ['無'];
 
         for (const content of contents) {
-            // 更強大的清理邏輯：偵測並移除「1. 分類名稱：」等前綴
+            // 清理子項內容：
+            // 由於 AI 之前的錯誤或者是歷史資料，子項開頭可能帶有 "1. 機房搬遷："
+            // 我們要把這些重複的標題與編號全部去除
             const categoryEscaped = category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // 此正則匹配：(數字編號)? (分類名稱)? (冒號或空格)
             const cleanRegex = new RegExp(`^(\\d+[\\.、\\s]*)?(${categoryEscaped})?[：:\\s]*`, '');
             const cleanContent = content.replace(cleanRegex, '').trim();
+
+            if (!cleanContent) continue;
 
             paragraphs.push(
                 new Paragraph({
@@ -312,7 +320,7 @@ function generateKeyPointsParagraphs(keyPoints: MeetingMinutes['keyPoints']): Pa
                             font: '標楷體',
                         }),
                     ],
-                    bullet: { level: 1 }, // 保持 level 1 (通常是圓圈)
+                    bullet: { level: 1 }, // 子項內容使用圓圈
                     spacing: { after: 50 },
                 })
             );
