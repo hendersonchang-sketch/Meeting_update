@@ -18,16 +18,11 @@ export async function GET(
         if (!meeting) {
             return new NextResponse('Meeting not found', { status: 404 });
         }
-
         let docxPath = meeting.output_docx_path;
-        let fileExists = false;
+        let fileExists = docxPath && fs.existsSync(docxPath);
 
-        if (docxPath && fs.existsSync(docxPath)) {
-            fileExists = true;
-        }
-
-        // 如果檔案不存在但有分析後的 JSON，則重新生成
-        if (!fileExists && meeting.minutes_json) {
+        // 優先從現有的 JSON 重新生成 Word 檔，以確保最新的格式（docx-generator.ts）被套用
+        if (meeting.minutes_json) {
             try {
                 const minutes = JSON.parse(meeting.minutes_json);
                 const outputDir = path.join(process.cwd(), 'outputs');
@@ -35,16 +30,21 @@ export async function GET(
                     fs.mkdirSync(outputDir, { recursive: true });
                 }
 
+                // 產生新的檔名（增加時間戳記避免快取）
                 const filename = `meeting_${id}_${Date.now()}.docx`;
                 docxPath = path.join(outputDir, filename);
 
                 await saveMeetingDocument(minutes, docxPath);
 
-                // 更新資料庫中的路徑
+                // 更新資料庫中的路徑，下次下載如果不想重打也可以，但這裡我們為了保險起見每次都重產或是有 JSON 就重產
                 updateMeeting(id, { output_docx_path: docxPath });
                 fileExists = true;
             } catch (genError) {
                 console.error('Failed to generate DOCX on the fly:', genError);
+                // 如果重產失敗且舊檔還在，就勉強用舊檔
+                if (docxPath && fs.existsSync(docxPath)) {
+                    fileExists = true;
+                }
             }
         }
 

@@ -298,8 +298,10 @@ function generateKeyPointsParagraphs(keyPoints: MeetingMinutes['keyPoints']): Pa
         let contents = categoryMap.get(category) || ['無'];
 
         for (const content of contents) {
-            // 清理內容：移除內容開頭可能重複出現的「數字.」編號
-            const cleanContent = content.replace(/^(\d+[\.、\s]+)/, '').trim();
+            // 更強大的清理邏輯：偵測並移除「1. 分類名稱：」等前綴
+            const categoryEscaped = category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const cleanRegex = new RegExp(`^(\\d+[\\.、\\s]*)?(${categoryEscaped})?[：:\\s]*`, '');
+            const cleanContent = content.replace(cleanRegex, '').trim();
 
             paragraphs.push(
                 new Paragraph({
