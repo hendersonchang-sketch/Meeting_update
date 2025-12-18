@@ -305,8 +305,8 @@ function generateKeyPointsParagraphs(keyPoints: MeetingMinutes['keyPoints']): Pa
             // 由於 AI 之前的錯誤或者是歷史資料，子項開頭可能帶有 "1. 機房搬遷："
             // 我們要把這些重複的標題與編號全部去除
             const categoryEscaped = category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            // 此正則匹配：(數字編號)? (分類名稱)? (冒號或空格)
-            const cleanRegex = new RegExp(`^(\\d+[\\.、\\s]*)?(${categoryEscaped})?[：:\\s]*`, '');
+            // 此正則匹配：(數字編號或項目符號)? (分類名稱)? (冒號或空格)
+            const cleanRegex = new RegExp(`^([\\d+[\\.、\\s]*|[●○•\\-\\*]\\s*)*(${categoryEscaped})?[：:\\s]*`, '');
             const cleanContent = content.replace(cleanRegex, '').trim();
 
             if (!cleanContent) continue;

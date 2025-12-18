@@ -186,16 +186,16 @@ export default function MeetingPage({ params }: { params: Promise<{ id: string }
                                     </h3>
                                     <ul className="space-y-3">
                                         {item.content?.map((point: string, i: number) => {
-                                            // 清理子項目：移除重複的「數字. 類別名稱：」
+                                            // 清理子項目：移除重複的標題、編號及符號
                                             const categoryEscaped = cleanCategory.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                                            const cleanRegex = new RegExp(`^(\\d+[\\.、\\s]*)?(${categoryEscaped})?[：:\\s]*`, '');
+                                            const cleanRegex = new RegExp(`^([\\d+[\\.、\\s]*|[●○•\\-\\*]\\s*)*(${categoryEscaped})?[：:\\s]*`, '');
                                             const cleanPoint = point.replace(cleanRegex, '').trim();
 
                                             if (!cleanPoint) return null;
 
                                             return (
                                                 <li key={i} className="flex gap-3 text-gray-300">
-                                                    <span className="text-blue-500 mt-1.5">•</span>
+                                                    <span className="text-blue-500 mt-1.5 font-bold">○</span>
                                                     <span className="leading-relaxed">{cleanPoint}</span>
                                                 </li>
                                             );
