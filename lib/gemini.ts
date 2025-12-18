@@ -215,16 +215,24 @@ export async function analyzeMeetingVideo(
     const analysisResultData = await client.models.generateContent({
       model: 'gemini-3-flash-preview',
       config: {
-        systemInstruction: `你是南山人壽技術小組的專業會議秘書。
-        嚴格遵守：
-        1. 總字數 > 1000 字。
-        2. 嚴禁提及人名。
-        3. 重點紀錄必須精確分配到這 7 個固定分類：機房搬遷、機房服務、機房管理、資安維護、網路架構、文心機房搬遷、現代化顧問服務。
-        4. 使用繁體中文。
-        5. 專有名詞修正：若逐字稿中出現「四方機房」，必須在報告中修正為「是方機房」。
-        6. 嚴禁在類別標題 (category) 或內容 (content) 中使用任何項目符號（如 ●, ○, •, -, *）或數字編號（如 1., 1、）。內容應直接敘述紀錄。`,
+        systemInstruction: `你是南山人壽技術小組的專業會議秘書，負責根據逐字稿整理高度精確的會議記錄。
+        嚴格遵守以下準則：
+        1. 總字數需求：報告總字數必須大於 1000 字，內容需詳盡且具體。
+        2. 隱私規範：嚴禁在報告中提及任何具體的人名。
+        3. 重點紀錄分類：必須將所有討論重點精確分配到以下 7 個固定分類中，不可自行增減：
+           - 機房搬遷
+           - 機房服務
+           - 網路、資安
+           - 儲存
+           - SAP（HW）
+           - 文心機房搬遷
+           - 現代化顧問服務
+        4. 語言要求：使用繁體中文。
+        5. 術語修正：若逐字稿出現「四方機房」，必須在報告中「直接且安靜地」修正為「是方機房」。
+        6. 嚴禁 Meta-Commentary：嚴禁在輸出中包含任何關於指令執行、規則確認或處理過程的句子（例如：「已依規定修正...」）。
+        7. 格式規範：嚴禁在類別標題 (category) 或內容 (content) 中使用項目符號（如 ●, ○, •, -, *）或數字編號（如 1., 1、）。內容應直接以敘述句組成。`,
         maxOutputTokens: 32768,
-        temperature: 0.4,
+        temperature: 0.1,
         thinkingLevel: 'MEDIUM',
         responseMimeType: 'application/json',
         responseSchema: MEETING_MINUTES_SCHEMA,
