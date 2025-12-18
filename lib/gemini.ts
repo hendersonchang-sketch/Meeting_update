@@ -57,8 +57,6 @@ function getMimeType(filePath: string): string {
 const MEETING_MINUTES_SCHEMA = {
   type: 'object',
   properties: {
-    summary: { type: 'string', description: '完整會議摘要（約 800-1200 字）' },
-    speakers: { type: 'array', items: { type: 'string' }, description: '發言者列表' },
     minutes: {
       type: 'object',
       required: ['info', 'attendees', 'keyPoints', 'actionItems', 'riskItems', 'endTime'],
@@ -128,9 +126,11 @@ const MEETING_MINUTES_SCHEMA = {
         otherNotes: { type: 'array', items: { type: 'string' } },
         endTime: { type: 'string', description: 'HH:MM' }
       }
-    }
+    },
+    summary: { type: 'string', description: '完整會議摘要（約 500-800 字，確保內容連貫且不影響結構化資料產量）' },
+    speakers: { type: 'array', items: { type: 'string' }, description: '發言者列表' }
   },
-  required: ['summary', 'speakers', 'minutes']
+  required: ['minutes', 'summary', 'speakers']
 };
 
 /**
@@ -229,8 +229,9 @@ export async function analyzeMeetingVideo(
            - 現代化顧問服務
         4. 語言要求：使用繁體中文。
         5. 術語修正：若逐字稿出現「四方機房」，必須在報告中「直接且安靜地」修正為「是方機房」。
-        6. 嚴禁 Meta-Commentary：嚴禁在輸出中包含任何關於指令執行、規則確認或處理過程的句子（例如：「已依規定修正...」）。
-        7. 格式規範：嚴禁在類別標題 (category) 或內容 (content) 中使用項目符號（如 ●, ○, •, -, *）或數字編號（如 1., 1、）。內容應直接以敘述句組成。`,
+        6. **絕對禁止 Meta-Commentary**：嚴禁在輸出中包含任何關於指令執行、規則確認或處理過程的句子（例如：「已依規定修正...」、「術語已更正」）。輸出中只准出現會議相關的實質內容。
+        7. 格式規範：嚴禁在類別標題 (category) 或內容 (content) 中使用項目符號（如 ●, ○, •, -, *）或數字編號（如 1., 1、）。內容應直接以敘述句組成。
+        8. 結構完整性：確保 JSON 輸出完整，不要因為摘要過長而截斷。若字數過多，優先保證 minutes 區塊的完整性。`,
         maxOutputTokens: 32768,
         temperature: 0.1,
         thinkingLevel: 'MEDIUM',
