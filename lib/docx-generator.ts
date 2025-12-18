@@ -278,42 +278,44 @@ function generateKeyPointsParagraphs(keyPoints: MeetingMinutes['keyPoints']): Pa
     }
 
     // 依照固定順序輸出
-    for (const category of fixedCategories) {
-        // 分類標題（粗體）
+    fixedCategories.forEach((category, index) => {
+        // 分類標題（數字編號 1. 2. ...）
         paragraphs.push(
             new Paragraph({
                 children: [
                     new TextRun({
-                        text: `${category}：`,
+                        text: `${index + 1}. ${category}：`,
                         size: 24,
                         font: '標楷體',
                         bold: true,
                     }),
                 ],
-                bullet: { level: 0 },
-                spacing: { before: 100 },
+                spacing: { before: 200, after: 100 },
             })
         );
 
         // 取得該分類的內容，若無則顯示「無」
-        const contents = categoryMap.get(category) || ['無'];
+        let contents = categoryMap.get(category) || ['無'];
 
         for (const content of contents) {
+            // 清理內容：移除內容開頭可能重複出現的「數字.」編號
+            const cleanContent = content.replace(/^(\d+[\.、\s]+)/, '').trim();
+
             paragraphs.push(
                 new Paragraph({
                     children: [
                         new TextRun({
-                            text: content,
+                            text: cleanContent,
                             size: 24,
                             font: '標楷體',
                         }),
                     ],
-                    bullet: { level: 1 },
+                    bullet: { level: 1 }, // 保持 level 1 (通常是圓圈)
                     spacing: { after: 50 },
                 })
             );
         }
-    }
+    });
 
     return paragraphs;
 }
