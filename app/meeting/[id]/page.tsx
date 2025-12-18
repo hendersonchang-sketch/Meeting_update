@@ -92,7 +92,11 @@ export default function MeetingPage({ params }: { params: Promise<{ id: string }
                 </h1>
                 <div className="flex items-center gap-4 text-gray-400">
                     <span className="flex items-center gap-1">📅 {meeting.date}</span>
-                    <span className="flex items-center gap-1">⏱️ {meeting.created_at.split('T')[1].slice(0, 5)}</span>
+                    <span className="flex items-center gap-1">
+                        ⏱️ {meeting.created_at?.includes('T')
+                            ? meeting.created_at.split('T')[1].slice(0, 5)
+                            : meeting.created_at?.split(' ')[1]?.slice(0, 5) || 'N/A'}
+                    </span>
                     <span className={`status-badge ${meeting.status === 'completed' ? 'status-completed' : 'status-processing'}`}>
                         {meeting.status === 'completed' ? '✅ 已完成' : '⏳ 處理中'}
                     </span>

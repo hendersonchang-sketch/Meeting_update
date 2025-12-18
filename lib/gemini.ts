@@ -187,16 +187,17 @@ export async function analyzeMeetingVideo(
     const transcriptResult = await client.models.generateContent({
       model: 'gemini-3-flash-preview',
       config: {
-        systemInstruction: '你是一個專業的速記員。將影音轉換為繁體中文逐字稿。注意：所有提到的機房名稱「四方機房」必須正確記錄為「是方機房」。',
+        systemInstruction: '你是一個專業的速記員。這是一場 PPT 會議，請對每一頁 PPT 進行 OCR 文字掃描，並以該文字內容為基準來對齊語音說明。注意：所有提到的機房名稱「四方機房」必須正確記錄為「是方機房」。',
         maxOutputTokens: 32768,
         temperature: 0.1,
-        thinkingLevel: 'minimal',
+        thinkingLevel: 'HIGH',
+        mediaResolution: 'MEDIA_RESOLUTION_HIGH',
       },
       contents: [{
         role: 'user',
         parts: [
           { inlineData: { mimeType, data: base64Video } },
-          { text: '請開始生成完整的逐字稿。' },
+          { text: '請精確地將簡報畫面中的文字與講者的說明對齊，產出包含 PPT 標題與時間戳的專業逐字稿。' },
         ]
       }]
     });
@@ -223,7 +224,7 @@ export async function analyzeMeetingVideo(
         5. 專有名詞修正：若逐字稿中出現「四方機房」，必須在報告中修正為「是方機房」。`,
         maxOutputTokens: 32768,
         temperature: 0.4,
-        thinkingLevel: 'medium',
+        thinkingLevel: 'MEDIUM',
         responseMimeType: 'application/json',
         responseSchema: MEETING_MINUTES_SCHEMA,
       },
@@ -260,7 +261,7 @@ export async function analyzePPTX(pptxContent: string): Promise<string> {
       model: 'gemini-3-flash-preview',
       config: {
         systemInstruction: '你是一個專業的簡報分析師。',
-        thinkingLevel: 'low'
+        thinkingLevel: 'LOW'
       },
       contents: [{
         role: 'user',
@@ -284,7 +285,7 @@ export async function analyzeDocx(docxContent: string): Promise<string> {
       model: 'gemini-3-flash-preview',
       config: {
         systemInstruction: '你是一個專業的文件摘要專家。',
-        thinkingLevel: 'low'
+        thinkingLevel: 'LOW'
       },
       contents: [{
         role: 'user',
@@ -314,7 +315,7 @@ export async function refineMeetingMinutes(
         systemInstruction: '你是一個專業的會議顧問。',
         responseMimeType: 'application/json',
         responseSchema: MEETING_MINUTES_SCHEMA.properties.minutes,
-        thinkingLevel: 'medium',
+        thinkingLevel: 'MEDIUM',
       },
       contents: [{
         role: 'user',
@@ -340,7 +341,7 @@ export async function generateSummary(minutes: MeetingMinutes): Promise<string> 
       model: 'gemini-3-flash-preview',
       config: {
         systemInstruction: '你是一個各類會議的摘要專家。',
-        thinkingLevel: 'low'
+        thinkingLevel: 'LOW'
       },
       contents: [{
         role: 'user',
