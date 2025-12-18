@@ -37,13 +37,14 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
 }
 
 html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  font-family: "Microsoft JhengHei", "微軟正黑體", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
 }
 
 body {
@@ -60,7 +61,7 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: 
+  background:
     radial-gradient(ellipse at 20% 20%, rgba(0, 102, 204, 0.15) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 80%, rgba(0, 166, 81, 0.1) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 50%, rgba(255, 107, 53, 0.05) 0%, transparent 50%);
@@ -75,7 +76,7 @@ body::before {
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
@@ -182,8 +183,15 @@ body::before {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
 }
 
 /* 表格樣式 */
@@ -231,6 +239,7 @@ body::before {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -246,6 +255,7 @@ body::before {
     opacity: 0;
     transform: translateX(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -267,7 +277,9 @@ body::before {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* 會議詳情摺疊區塊 */
@@ -300,24 +312,24 @@ body::before {
   .upload-zone {
     padding: 40px 20px;
   }
-  
+
   .meeting-table thead {
     display: none;
   }
-  
+
   .meeting-table tbody tr {
     display: block;
     margin-bottom: 16px;
     border-radius: 12px;
     padding: 16px;
   }
-  
+
   .meeting-table td {
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
   }
-  
+
   .meeting-table td::before {
     content: attr(data-label);
     font-weight: 600;
