@@ -37,7 +37,9 @@ function initDatabase() {
             transcript TEXT,
             summary TEXT,
             minutes_json TEXT,
-            output_docx_path TEXT
+            output_docx_path TEXT,
+            customer_type TEXT DEFAULT 'nanshan',
+            custom_prompt TEXT
         )
     `);
 
@@ -75,6 +77,8 @@ export function createMeeting(data: {
     video_path?: string;
     pptx_path?: string;
     docx_path?: string;
+    customer_type?: string;
+    custom_prompt?: string;
 }): Meeting {
     const database = getDb();
     const now = new Date().toISOString();
@@ -90,11 +94,13 @@ export function createMeeting(data: {
         video_path: data.video_path,
         pptx_path: data.pptx_path,
         docx_path: data.docx_path,
+        customer_type: data.customer_type || 'nanshan',
+        custom_prompt: data.custom_prompt,
     };
 
     const stmt = database.prepare(`
-        INSERT INTO meetings (id, title, date, status, created_at, updated_at, video_path, pptx_path, docx_path)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO meetings (id, title, date, status, created_at, updated_at, video_path, pptx_path, docx_path, customer_type, custom_prompt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -106,7 +112,9 @@ export function createMeeting(data: {
         meeting.updated_at,
         meeting.video_path || null,
         meeting.pptx_path || null,
-        meeting.docx_path || null
+        meeting.docx_path || null,
+        meeting.customer_type,
+        meeting.custom_prompt || null
     );
 
     return meeting;
@@ -138,6 +146,14 @@ export function updateMeeting(id: string, data: Partial<Meeting>): void {
     if (data.output_docx_path !== undefined) {
         fields.push('output_docx_path = ?');
         values.push(data.output_docx_path);
+    }
+    if (data.customer_type !== undefined) {
+        fields.push('customer_type = ?');
+        values.push(data.customer_type);
+    }
+    if (data.custom_prompt !== undefined) {
+        fields.push('custom_prompt = ?');
+        values.push(data.custom_prompt);
     }
 
     values.push(id);
@@ -223,6 +239,12 @@ export function getLogsByMeetingId(meetingId: string): LogEntry[] {
     const database = getDb();
     const stmt = database.prepare('SELECT * FROM logs WHERE meeting_id = ? ORDER BY timestamp DESC');
     return stmt.all(meetingId) as LogEntry[];
+}
+
+export function getLatestLogByMeetingId(meetingId: string): LogEntry | undefined {
+    const database = getDb();
+    const stmt = database.prepare('SELECT * FROM logs WHERE meeting_id = ? ORDER BY timestamp DESC LIMIT 1');
+    return stmt.get(meetingId) as LogEntry | undefined;
 }
 
 // ========== 設定操作 ==========

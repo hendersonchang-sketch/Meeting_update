@@ -57,6 +57,9 @@ export interface Meeting {
     summary?: string;
     minutes_json?: string;
     output_docx_path?: string;
+    customer_type?: string;
+    custom_prompt?: string;
+    latestLog?: string;
 }
 
 export interface MeetingStats {

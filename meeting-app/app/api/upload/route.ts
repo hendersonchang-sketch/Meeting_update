@@ -32,8 +32,10 @@ export async function POST(request: NextRequest) {
         let pptxPath: string | undefined;
         let docxPath: string | undefined;
         let title = formData.get('title') as string || '未命名會議';
+        let customerType = formData.get('customer_type') as string || 'nanshan';
+        let customPrompt = formData.get('custom_prompt') as string || '';
 
-        logger.info(`會議 ID: ${id}, 標題: ${title}`);
+        logger.info(`會議 ID: ${id}, 標題: ${title}, 客戶: ${customerType}`);
 
         // 處理上傳的檔案
         for (const [key, value] of formData.entries()) {
@@ -73,12 +75,18 @@ export async function POST(request: NextRequest) {
             video_path: videoPath,
             pptx_path: pptxPath,
             docx_path: docxPath,
+            customer_type: customerType,
+            custom_prompt: customPrompt,
         });
 
         logger.info(`會議記錄已建立: ${id}`);
 
+        if (!videoPath) {
+            return NextResponse.json({ success: false, error: '未偵測到影音檔案' }, { status: 400 });
+        }
+
         // 開始非同步分析（不等待完成）
-        processVideoAsync(id, videoPath, pptxPath, docxPath);
+        processVideoAsync(id, videoPath, customerType, customPrompt);
 
         return NextResponse.json({
             success: true,
@@ -106,9 +114,9 @@ export async function POST(request: NextRequest) {
  */
 async function processVideoAsync(
     meetingId: string,
-    videoPath?: string,
-    pptxPath?: string,
-    docxPath?: string
+    videoPath: string,
+    customerType: string = 'nanshan',
+    customPrompt: string = ''
 ) {
     const logger = createLogger('VideoProcessor', meetingId);
 
@@ -122,11 +130,11 @@ async function processVideoAsync(
             return;
         }
 
-        logger.info('開始分析會議影片', { videoPath });
+        logger.info('開始分析會議影片', { videoPath, customerType, hasCustomPrompt: !!customPrompt });
 
         // 使用 Gemini 分析影片
         logger.info('呼叫 Gemini API 進行分析...');
-        const result = await analyzeMeetingVideo(videoPath, meetingId);
+        const result = await analyzeMeetingVideo(videoPath, meetingId, customerType, customPrompt);
 
         logger.info('Gemini 分析完成', {
             transcriptLength: result.transcript?.length || 0,
@@ -144,8 +152,8 @@ async function processVideoAsync(
             `meeting_${meetingId}_${Date.now()}.docx`
         );
 
-        logger.info('生成 Word 文件...');
-        const docBuffer = await generateMeetingDocument(result.minutes);
+        logger.info('生成 Word 文件...', { customerType });
+        const docBuffer = await generateMeetingDocument(result.minutes, customerType);
         await writeFile(outputDocxPath, docBuffer);
         logger.info('Word 文件已生成', { path: outputDocxPath });
 

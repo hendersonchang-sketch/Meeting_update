@@ -8,8 +8,10 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        setIsMounted(true);
         loadSettings();
     }, []);
 
@@ -101,7 +103,7 @@ export default function SettingsPage() {
                                 value={apiKey}
                                 onChange={(e) => setApiKey(e.target.value)}
                                 placeholder="輸入您的 Gemini API Key"
-                                className="w-full"
+                                className="w-full bg-white/5 border border-white/10 text-white rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                             />
                             <p className="text-sm text-gray-500 mt-2">
                                 請至{' '}

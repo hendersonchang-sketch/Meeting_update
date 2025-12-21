@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllMeetings, getMeetingStats } from '@/lib/database';
+import { getAllMeetings, getMeetingStats, getLatestLogByMeetingId } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
     try {
         const meetings = getAllMeetings();
         const stats = getMeetingStats();
+
+        // 注入最新的處理日誌
+        meetings.forEach(meeting => {
+            if (meeting.status === 'processing') {
+                const latestLog = getLatestLogByMeetingId(meeting.id);
+                if (latestLog) {
+                    meeting.latestLog = latestLog.message;
+                }
+            }
+        });
 
         return NextResponse.json({
             success: true,

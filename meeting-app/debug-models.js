@@ -50,6 +50,7 @@ async function main() {
             'gemini-1.5-pro-001',
             'gemini-1.5-pro-002',
             'gemini-pro',
+            'gemini-3.0-flash-exp',
             'gemini-2.0-flash-exp'
         ];
 
