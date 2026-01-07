@@ -164,9 +164,12 @@ export function deleteMeeting(id: string): boolean {
 /**
  * 清除所有會議記錄 (開發用)
  */
-export function clearAllMeetings(): void {
+export function clearAllMeetings(): number {
+  console.log('[Database] Clearing all meetings...');
   const stmt = db.prepare('DELETE FROM meetings');
-  stmt.run();
+  const result = stmt.run();
+  console.log(`[Database] Deleted ${result.changes} meetings.`);
+  return result.changes;
 }
 
 /**

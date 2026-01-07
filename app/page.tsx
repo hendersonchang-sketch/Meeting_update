@@ -28,6 +28,7 @@ export default function Home() {
   const [dragOver, setDragOver] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [meetingTitle, setMeetingTitle] = useState('');
+  const [selectedRole, setSelectedRole] = useState('secretary');
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
   const [showDebug, setShowDebug] = useState(true);
 
@@ -136,12 +137,25 @@ export default function Home() {
       const data = await res.json();
 
       if (data.success) {
+        // 成功上傳後，立即觸發分析 API
+        // 使用非同步呼叫，不阻擋 UI 重置 (但確保請求發出)
+        const meetingId = data.data.meetingId;
+        const currentRole = selectedRole; // Capture current role
+        console.log('Triggering analysis for:', meetingId, 'Role:', currentRole);
+
+        fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ meetingId, role: currentRole })
+        }).catch(err => console.error("Auto-analysis trigger failed:", err));
+
         setTimeout(() => {
           setIsUploading(false);
           setUploadProgress(0);
           setSelectedFiles([]);
           setMeetingTitle('');
           loadMeetings();
+          // 可以在這裡加一個簡單的通知或 toast 說「上傳完成，開始分析...」
         }, 500);
       } else {
         throw new Error(data.error);
@@ -234,8 +248,8 @@ export default function Home() {
               <Link
                 href="/settings"
                 className={`p-3 rounded-xl transition-colors ${hasApiKey === false
-                    ? 'bg-red-500/20 text-red-400 animate-pulse'
-                    : 'bg-white/10 text-gray-400 hover:text-white'
+                  ? 'bg-red-500/20 text-red-400 animate-pulse'
+                  : 'bg-white/10 text-gray-400 hover:text-white'
                   }`}
                 title="系統設定"
               >
@@ -390,6 +404,24 @@ export default function Home() {
                   </div>
                 </div>
               )}
+
+              {/* 角色選擇 */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-400 mb-2">會議記錄角色</label>
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-blue-500 transition-colors appearance-none cursor-pointer"
+                >
+                  <option value="secretary">專業會議秘書 (預設) - 詳細流水帳</option>
+                  <option value="pmo">PMO 資深專案經理 - 重點摘要與風險追蹤</option>
+                </select>
+                <p className="mt-2 text-xs text-gray-500">
+                  {selectedRole === 'secretary'
+                    ? '適合一般會議記錄，包含詳細對話內容與條列式重點。'
+                    : '適合專案檢討會議，嚴格追蹤待辦事項日期與資源衝突風險。'}
+                </p>
+              </div>
 
               {/* 上傳按鈕 */}
               {selectedFiles.length > 0 && !isUploading && (

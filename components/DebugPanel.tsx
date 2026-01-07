@@ -152,9 +152,9 @@ export default function DebugPanel({
                                         const res = await fetch('/api/reset', { method: 'POST' });
                                         const data = await res.json();
                                         if (data.success) {
-                                            alert('系統已重置完成');
-                                            loadLogs(); // 重新載入日誌（應該只剩下一條重置成功的日誌）
-                                            // 可選：重新載入網頁以清除前端暫存
+                                            const details = data.details || {};
+                                            alert(`系統已重置完成！\n\n- 刪除會議: ${details.meetingsDeleted ?? 'N/A'}\n- 刪除日誌: ${details.logsDeleted ?? 'N/A'}\n- DB路徑: ${details.dbPath || '未知'}`);
+                                            loadLogs();
                                             window.location.reload();
                                         } else {
                                             alert('重置失敗: ' + data.error);
