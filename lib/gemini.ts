@@ -7,7 +7,7 @@ import * as path from 'path';
 import { setGlobalDispatcher, Agent } from 'undici';
 
 // 僅在 Node.js 環境中執行
-if (typeof global.Dispatcher !== 'undefined' || typeof process !== 'undefined') {
+if (typeof (global as any).Dispatcher !== 'undefined' || typeof process !== 'undefined') {
   setGlobalDispatcher(new Agent({
     connect: { timeout: 1200000 }, // 連線超時: 20 分鐘
     bodyTimeout: 1200000,          // 內容接收超時: 20 分鐘
