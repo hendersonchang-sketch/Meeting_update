@@ -59,7 +59,7 @@ export interface MeetingRecord {
     updated_at: string;
     title: string;
     date: string;
-    status: 'processing' | 'completed' | 'failed';
+    status: 'processing' | 'completed' | 'failed' | 'aborted';
     video_path?: string;
     pptx_path?: string;
     docx_path?: string;

@@ -16,7 +16,7 @@ if (typeof (global as any).Dispatcher !== 'undefined' || typeof process !== 'und
 }
 // -------------------------------------------------------------------
 import { MeetingMinutes, GeminiAnalysisResult } from './types';
-import { getSetting } from './database';
+import { getSetting, getMeetingById } from './database';
 import { createLogger } from './logger';
 import { getVideoDuration, getVideoInfo, splitVideo, cleanupTempFiles, VIDEO_CONFIG } from './videoUtils';
 
@@ -680,6 +680,16 @@ export async function analyzeMeetingVideoWithAutoSplit(
       let cumulativeContext = existingContext || '';
 
       for (let i = 0; i < segments.length; i++) {
+        // === 中斷檢查點 === 
+        if (meetingId) {
+          const meeting = getMeetingById(meetingId);
+          if (meeting?.status === 'aborted') {
+            analysisLogger.warn(`分析已被中斷（在第 ${i + 1}/${segments.length} 段前）`);
+            await cleanupTempFiles(tempDir);
+            throw new Error('ANALYSIS_ABORTED');
+          }
+        }
+
         analysisLogger.info(`正在分析第 ${i + 1}/${segments.length} 段...`);
 
         try {
@@ -702,6 +712,10 @@ export async function analyzeMeetingVideoWithAutoSplit(
           analysisLogger.info(`第 ${i + 1}/${segments.length} 段分析完成`);
 
         } catch (segmentError) {
+          // 檢查是否是主動中斷
+          if (segmentError instanceof Error && segmentError.message === 'ANALYSIS_ABORTED') {
+            throw segmentError;
+          }
           analysisLogger.error(`第 ${i + 1}/${segments.length} 段分析失敗`, { error: segmentError });
           // 繼續處理下一段，不中斷整個流程
           transcripts.push(`--- 第 ${i + 1} 段分析失敗 ---\n錯誤：${segmentError instanceof Error ? segmentError.message : String(segmentError)}`);

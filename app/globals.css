@@ -1,20 +1,44 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════════
+   Linear 風格設計系統 - 變數定義
+   ═══════════════════════════════════════════════════════════════════ */
+
 :root {
-  /* 主題色彩 - 南山人壽風格 */
-  --primary: #0066CC;
-  --primary-dark: #004C99;
-  --primary-light: #3399FF;
-  --secondary: #00A651;
-  --accent: #FF6B35;
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --card-bg: rgba(255, 255, 255, 0.05);
-  --card-border: rgba(255, 255, 255, 0.1);
-  --success: #22C55E;
-  --warning: #F59E0B;
-  --error: #EF4444;
-  --info: #3B82F6;
+  /* 背景層級 */
+  --bg-primary: #0D0D0D;
+  --bg-secondary: #161616;
+  --bg-tertiary: #1F1F1F;
+  --bg-elevated: #262626;
+
+  /* 邊框 */
+  --border-subtle: #242424;
+  --border-default: #333333;
+  --border-strong: #444444;
+
+  /* 文字 */
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0A0A0;
+  --text-tertiary: #5C5C5C;
+  --text-disabled: #3A3A3A;
+
+  /* 強調色 */
+  --accent-purple: #8B5CF6;
+  --accent-blue: #3B82F6;
+  --accent-green: #22C55E;
+  --accent-orange: #F59E0B;
+  --accent-red: #EF4444;
+
+  /* 舊變數相容（漸進過渡） */
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+  --card-bg: var(--bg-secondary);
+  --card-border: var(--border-subtle);
+  --primary: var(--accent-purple);
+  --success: var(--accent-green);
+  --warning: var(--accent-orange);
+  --error: var(--accent-red);
+  --info: var(--accent-blue);
 }
 
 @theme inline {
@@ -24,14 +48,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --background: #f8fafc;
-    --foreground: #1e293b;
-    --card-bg: rgba(255, 255, 255, 0.9);
-    --card-border: rgba(0, 0, 0, 0.1);
-  }
-}
+/* ═══════════════════════════════════════════════════════════════════
+   全域基礎樣式
+   ═══════════════════════════════════════════════════════════════════ */
 
 * {
   box-sizing: border-box;
@@ -46,196 +65,385 @@ body {
 }
 
 body {
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  background: var(--bg-primary);
   min-height: 100vh;
-  color: var(--foreground);
+  color: var(--text-primary);
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* 動態背景效果 */
-body::before {
-  content: '';
+/* ═══════════════════════════════════════════════════════════════════
+   佈局元件
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 側邊欄 */
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-subtle);
   position: fixed;
-  top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background:
-    radial-gradient(ellipse at 20% 20%, rgba(0, 102, 204, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(0, 166, 81, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(255, 107, 53, 0.05) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: -1;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px;
+  z-index: 100;
 }
 
-/* 玻璃擬態卡片 */
-.glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+.sidebar-header {
+  padding: 8px 12px;
+  margin-bottom: 24px;
 }
 
-/* 按鈕樣式 */
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: white;
-  padding: 12px 28px;
-  border-radius: 12px;
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-weight: 600;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.sidebar-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.sidebar-item.active {
+  background: var(--accent-purple);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.05) 100%);
+  color: var(--accent-purple);
+}
+
+.sidebar-item svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.8;
+}
+
+.sidebar-section {
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.sidebar-section-title {
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+}
+
+/* 主要內容區 */
+.main-content {
+  margin-left: 240px;
+  min-height: 100vh;
+  padding: 32px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   卡片樣式 (Linear 風格)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 玻璃卡片（保留相容性但簡化） */
+.glass-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   按鈕樣式
+   ═══════════════════════════════════════════════════════════════════ */
+
+.btn-primary {
+  background: var(--accent-purple);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
   border: none;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 102, 204, 0.3);
+  transition: opacity 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 102, 204, 0.4);
+  opacity: 0.9;
 }
 
 .btn-primary:active {
-  transform: translateY(0);
+  opacity: 0.8;
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  padding: 12px 28px;
-  border-radius: 12px;
-  font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  border: 1px solid var(--border-default);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
 }
 
-/* 上傳區域樣式 */
-.upload-zone {
-  border: 2px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 60px 40px;
-  text-align: center;
-  transition: all 0.3s ease;
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  border: none;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.02);
+  transition: all 0.15s ease;
+}
+
+.btn-ghost:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   輸入框樣式
+   ═══════════════════════════════════════════════════════════════════ */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--text-primary);
+  width: 100%;
+  transition: border-color 0.15s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent-purple);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   上傳區域
+   ═══════════════════════════════════════════════════════════════════ */
+
+.upload-zone {
+  border: 1px dashed var(--border-default);
+  border-radius: 8px;
+  padding: 48px 32px;
+  text-align: center;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  background: transparent;
 }
 
 .upload-zone:hover,
 .upload-zone.drag-over {
-  border-color: var(--primary);
-  background: rgba(0, 102, 204, 0.1);
+  border-color: var(--accent-purple);
+  background: rgba(139, 92, 246, 0.05);
 }
 
-.upload-zone.drag-over {
-  transform: scale(1.02);
-}
+/* ═══════════════════════════════════════════════════════════════════
+   進度條
+   ═══════════════════════════════════════════════════════════════════ */
 
-/* 進度條 */
 .progress-bar {
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
-  border-radius: 4px;
-  transition: width 0.5s ease;
+  background: var(--accent-purple);
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
 
-/* 狀態標籤 */
+/* ═══════════════════════════════════════════════════════════════════
+   狀態標籤
+   ═══════════════════════════════════════════════════════════════════ */
+
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 13px;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .status-processing {
-  background: rgba(59, 130, 246, 0.2);
+  background: rgba(59, 130, 246, 0.15);
   color: #60A5FA;
-  animation: pulse 2s infinite;
 }
 
 .status-completed {
-  background: rgba(34, 197, 94, 0.2);
+  background: rgba(34, 197, 94, 0.15);
   color: #4ADE80;
 }
 
 .status-failed {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.15);
   color: #F87171;
 }
 
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.6;
-  }
+.status-aborted {
+  background: rgba(107, 114, 128, 0.15);
+  color: #9CA3AF;
 }
 
-/* 表格樣式 */
+/* ═══════════════════════════════════════════════════════════════════
+   表格樣式
+   ═══════════════════════════════════════════════════════════════════ */
+
 .meeting-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 8px;
+  border-collapse: collapse;
 }
 
 .meeting-table thead th {
   text-align: left;
-  padding: 16px 20px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 13px;
+  padding: 12px 16px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .meeting-table tbody tr {
-  background: rgba(255, 255, 255, 0.03);
-  transition: all 0.3s ease;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.15s ease;
 }
 
 .meeting-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateX(4px);
+  background: var(--bg-tertiary);
+}
+
+.meeting-table tbody tr:last-child {
+  border-bottom: none;
 }
 
 .meeting-table td {
-  padding: 20px;
+  padding: 16px;
+  font-size: 14px;
 }
 
-.meeting-table td:first-child {
-  border-radius: 12px 0 0 12px;
+/* ═══════════════════════════════════════════════════════════════════
+   統計卡片
+   ═══════════════════════════════════════════════════════════════════ */
+
+.stat-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 16px 20px;
 }
 
-.meeting-table td:last-child {
-  border-radius: 0 12px 12px 0;
+.stat-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
 }
 
-/* 動畫效果 */
+.stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   動畫效果（簡化版）
+   ═══════════════════════════════════════════════════════════════════ */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease forwards;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
   }
 
   to {
@@ -244,34 +452,21 @@ body::before {
   }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.5s ease forwards;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 .animate-slide-in {
-  animation: slideIn 0.4s ease forwards;
+  animation: slideIn 0.2s ease forwards;
 }
 
-/* 載入動畫 */
+/* ═══════════════════════════════════════════════════════════════════
+   Loading 動畫
+   ═══════════════════════════════════════════════════════════════════ */
+
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--primary);
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-default);
+  border-top-color: var(--accent-purple);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -280,83 +475,108 @@ body::before {
   }
 }
 
-/* 會議詳情摺疊區塊 */
+/* ═══════════════════════════════════════════════════════════════════
+   Accordion / 摺疊區塊
+   ═══════════════════════════════════════════════════════════════════ */
+
 .accordion-section {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
-  margin-bottom: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  margin-bottom: 8px;
   overflow: hidden;
 }
 
 .accordion-header {
-  padding: 16px 20px;
+  padding: 14px 16px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: background 0.3s ease;
+  transition: background 0.15s ease;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .accordion-header:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-tertiary);
 }
 
 .accordion-content {
-  padding: 0 20px 20px;
+  padding: 0 16px 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
 }
 
-/* 響應式設計 */
-@media (max-width: 768px) {
-  .upload-zone {
-    padding: 40px 20px;
+/* ═══════════════════════════════════════════════════════════════════
+   響應式設計
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 60px;
+    padding: 16px 8px;
   }
 
-  .meeting-table thead {
+  .sidebar-item span,
+  .sidebar-header,
+  .sidebar-section-title {
     display: none;
   }
 
-  .meeting-table tbody tr {
-    display: block;
-    margin-bottom: 16px;
-    border-radius: 12px;
-    padding: 16px;
+  .sidebar-item {
+    justify-content: center;
+    padding: 12px;
   }
 
-  .meeting-table td {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-  }
-
-  .meeting-table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.7);
+  .main-content {
+    margin-left: 60px;
   }
 }
 
-/* 滾動條美化 */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+
+  .upload-zone {
+    padding: 32px 16px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   滾動條美化
+   ═══════════════════════════════════════════════════════════════════ */
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--border-default);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--border-strong);
 }
 
-/* 文字選取效果 */
+/* ═══════════════════════════════════════════════════════════════════
+   文字選取效果
+   ═══════════════════════════════════════════════════════════════════ */
+
 ::selection {
-  background: var(--primary);
+  background: var(--accent-purple);
   color: white;
 }
