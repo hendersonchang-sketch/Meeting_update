@@ -1,0 +1,4 @@
+﻿*.mp4
+*.db
+*.db-journal
+meeting-app/uploads/
