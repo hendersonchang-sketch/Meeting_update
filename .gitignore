@@ -1,4 +1,34 @@
-﻿*.mp4
+﻿# 環境變數與 API Keys
+.env
+.env.local
+.env*.local
+*.key
+*.pem
+config.local.*
+
+# 大型影音檔案
+*.mp4
+
+# 資料庫檔案
 *.db
+*.sqlite
+*.sqlite3
 *.db-journal
+
+# 使用者上傳檔案
 meeting-app/uploads/
+uploads/
+
+# Python 虛擬環境
+venv/
+env/
+__pycache__/
+
+# Node.js
+node_modules/
+.next/
+
+# 日誌檔案
+*.log
+debug*.html
+debug*.txt
